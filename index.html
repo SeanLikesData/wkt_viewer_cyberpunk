@@ -8,126 +8,447 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     
-    <!-- Leaflet Draw CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
     
     <style>
-        body {
+        /* Basic Reset */
+        * {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        
-        .container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
             box-sizing: border-box;
         }
         
+        /* Retro Futuristic Theme */
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #0a0a1a;
+            color: #00ff99;
+            padding: 20px;
+            line-height: 1.6;
+            position: relative;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 255, 153, 0.03) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 204, 0.03) 0%, transparent 20%),
+                linear-gradient(to bottom, #0a0a1a 0%, #080820 100%);
+        }
+        
+        /* CRT and Noise Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2uRkZGZmZlpaWmXl5dvb29xcXGTk5NnZ2c8TV1mAAAAG3RSTlNAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAvEOwtAAAFVklEQVR4XpWWB67c2BUFb3g557T/hRo9/WUMZHlgr4Bg8Z4qQgQJlHI4A8SzFVrapvmTF9O7dmYRFZ60YiBhJRCgh1FYhiLAmdvX0CzTOpNE77ME0Zty/nWWzchDtiqrmQDeuv3powQ5ta2eN0FY0InkqDD73lT9c9lEzwUNqgFHs9VQce3TVClFCQrSTfOiYkVJQBmpbq2L6iZavPnAPcoU0dSw0SUTqz/GtrGuXfbyyBniKykOWQWGqwwMA7QiYAxi+IlPdqo+hYHnUt5ZPfnsHJyNiDtnpJyayNBkF6cWoYGAMY92U2hXHF/C1M8uP/ZtYdiuj26UdAdQQSXQErwSOMzt/XWRWAz5GuSBIkwG1H3FabJ2OsUOUhGC6tK4EMtJO0ttC6IBD3kM0ve0tJwMdSfjZo+EEISaeTr9P3wYrGjXqyC1krcKdhMpxEnt5JetoulscpyzhXN5FRpuPHvbeQaKxFAEB6EN+cYN6xD7RYGpXpNndMmZgM5Dcs3YSNFDHUo2LGfZuukSWyUYirJAdYbF3MfqEKmjM+I2EfhA94iG3L7uKrR+GdWD73ydlIB+6hgref1QTlmgmbM3/LeX5GI1Ux1RWpgxpLuZ2+I+IjzZ8wqE4nilvQdkUdfhzI5QDWy+kw5Wgg2pGpeEVeCCA7b85BO3F9DzxB3cdqvBzWcmzbyMiqhzuYqtHRVG2y4x+KOlnyqla8AoWWpuBoYRxzXrfKuILl6SfiWCbjxoZJUaCBj1CjH7GIaDbc9kqBY3W/Rgjda1iqQcOJu2WW+76pZC9QG7M00dffe9hNnseupFL53r8F7YHSwJWUKP2q+k7RdsxyOB11n0xtOvnW4irMMFNV4H0uqwS5ExsmP9AxbDTc9JwgneAT5vTiUSm1E7BSflSt3bfa1tv8Di3R8n3Af7MNWzs49hmauE2wP+ttrq+AsWpFG2awvsuOqbipWHgtuvuaAE+A1Z/7gC9hesnr+7wqCwG8c5yAg3AL1fm8T9AZtp/bbJGwl1pNrE7RuOX7PeMRUERVaPpEs+yqeoSmuOlokqw49pgomjLeh7icHNlG19yjs6XXOMedYm5xH2YxpV2tc0Ro2jJfxC50ApuxGob7lMsxfTbeUv07TyYxpeLucEH1gNd4IKH2LAg5TdVhlCafZvpskfncCfx8pOhJzd76bJWeYFnFciwcYfubRc12Ip/ppIhA1/mSZ/RxjFDrJC5xifFjJpY2Xl5zXdguFqYyTR+zOW1E6STYwb/DzmxdZhbuE9YVvN0aTEFpPpuQ+WQJ7CIiC2L7EIMhUAZ/rPbdaHrupdvAkL+3FO1CJVQOJiAIpGGIDCY36ggMTB3SLVQpbF6uLVxK5Rz2NU/ReeAzjPkN+pz8QpFQIDALDitrMtwAAAABJRU5ErkJggg==');
+            opacity: 0.05;
+            pointer-events: none;
+            z-index: 9998;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: rgba(5, 5, 16, 0.8);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 
+                0 0 30px rgba(0, 255, 153, 0.3),
+                0 0 60px rgba(0, 255, 153, 0.1);
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Decorative circuit lines */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(to right, transparent 49.5%, rgba(0, 255, 153, 0.1) 49.5%, rgba(0, 255, 153, 0.1) 50.5%, transparent 50.5%),
+                linear-gradient(to bottom, transparent 49.5%, rgba(0, 255, 153, 0.1) 49.5%, rgba(0, 255, 153, 0.1) 50.5%, transparent 50.5%);
+            background-size: 30px 30px;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Corner decorations */
+        .corner {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            z-index: 2;
+        }
+        
+        .corner-tl {
+            top: 10px;
+            left: 10px;
+            border-top: 3px solid #ff00cc;
+            border-left: 3px solid #ff00cc;
+        }
+        
+        .corner-tr {
+            top: 10px;
+            right: 10px;
+            border-top: 3px solid #ff00cc;
+            border-right: 3px solid #ff00cc;
+        }
+        
+        .corner-bl {
+            bottom: 10px;
+            left: 10px;
+            border-bottom: 3px solid #ff00cc;
+            border-left: 3px solid #ff00cc;
+        }
+        
+        .corner-br {
+            bottom: 10px;
+            right: 10px;
+            border-bottom: 3px solid #ff00cc;
+            border-right: 3px solid #ff00cc;
+        }
+        
         h1 {
-            margin-top: 0;
-            color: #2c3e50;
+            font-family: 'Press Start 2P', cursive;
+            color: #ff00cc;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 5px #ff00cc,
+                0 0 10px rgba(255, 0, 204, 0.5);
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1::after {
+            content: 'WKT POLYGON VISUALIZER';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            color: rgba(255, 0, 204, 0.3);
+            transform: translateX(5px) translateY(5px);
+            z-index: -1;
         }
         
         .input-section {
             margin-bottom: 20px;
+            position: relative;
+            padding: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            background-color: rgba(15, 15, 45, 0.4);
+        }
+        
+        .label-wrapper {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            color: #00ffff;
+            display: block;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        label i {
+            margin-right: 10px;
+            color: #ff00cc;
         }
         
         textarea {
             width: 100%;
             height: 100px;
-            padding: 10px;
-            box-sizing: border-box;
-            font-family: monospace;
+            background-color: rgba(15, 15, 45, 0.7);
+            color: #00ff99;
+            border: 1px solid #00ffff;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'VT323', monospace;
+            font-size: 1.3rem;
             resize: vertical;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            box-shadow: 
+                0 0 10px rgba(0, 255, 255, 0.2),
+                inset 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
         }
         
-        .btn {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-right: 10px;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: #45a049;
-        }
-        
-        .btn-clear {
-            background-color: #f44336;
-        }
-        
-        .btn-clear:hover {
-            background-color: #d32f2f;
-        }
-        
-        .btn-sample {
-            background-color: #2196F3;
-        }
-        
-        .btn-sample:hover {
-            background-color: #0b7dda;
+        textarea:focus {
+            outline: none;
+            border-color: #ff00cc;
+            box-shadow: 
+                0 0 15px rgba(255, 0, 204, 0.3),
+                inset 0 0 10px rgba(0, 0, 0, 0.5);
         }
         
         .button-group {
             display: flex;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 15px;
+            margin-top: 20px;
         }
         
-        #map {
-            flex-grow: 1;
-            border-radius: 4px;
-            border: 1px solid #ddd;
-        }
-        
-        .error {
-            color: #f44336;
-            margin-top: 10px;
+        button {
+            font-family: 'Orbitron', sans-serif;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 5px;
             font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(30deg);
+            transition: transform 0.5s;
+            pointer-events: none;
+        }
+        
+        button:hover::after {
+            transform: rotate(30deg) translate(-30%, -30%);
+        }
+        
+        #visualizeBtn {
+            background: linear-gradient(135deg, #00ff99 0%, #00cc77 100%);
+            color: #000;
+        }
+        
+        #clearBtn {
+            background: linear-gradient(135deg, #ff3366 0%, #cc0044 100%);
+            color: #000;
+        }
+        
+        #sampleBtn {
+            background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
+            color: #000;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        
+        button i {
+            font-size: 1rem;
+        }
+        
+        #errorMsg {
+            color: #ff3366;
+            margin-top: 15px;
+            font-weight: bold;
+            padding: 15px;
+            background-color: rgba(255, 51, 102, 0.1);
+            border-left: 3px solid #ff3366;
+            border-radius: 3px;
+            display: none;
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(255, 51, 102, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
         }
         
         .info {
+            color: #00cccc;
             margin-top: 10px;
-            font-style: italic;
-            color: #666;
+            font-size: 1.1rem;
+            text-shadow: 0 0 3px rgba(0, 204, 204, 0.3);
+            padding: 5px;
+            border-radius: 3px;
         }
         
-        .basemap-info {
-            margin-top: 5px;
-            font-size: 0.9em;
-            color: #2196F3;
+        /* Status indicator */
+        .status {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'VT323', monospace;
+            font-size: 1.2rem;
+            color: #00ffff;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 5px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #00ff99;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #00ff99;
+        }
+        
+        #map {
+            height: 500px;
+            border-radius: 8px;
+            margin-top: 30px;
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Map overlay scanlines */
+        #map::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(0, 0, 0, 0) 50%, 
+                rgba(0, 0, 0, 0.05) 50%
+            );
+            background-size: 100% 4px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        /* Custom Styling for Leaflet */
+        .leaflet-container {
+            background: #0a0a1a !important;
+        }
+        
+        .leaflet-control-layers,
+        .leaflet-bar {
+            border-color: #00ffff !important;
+            background: rgba(15, 15, 45, 0.8) !important;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2) !important;
+        }
+        
+        .leaflet-control-layers-toggle,
+        .leaflet-bar a {
+            color: #00ffff !important;
+        }
+        
+        .leaflet-control-layers-toggle:hover,
+        .leaflet-bar a:hover {
+            background-color: rgba(0, 255, 255, 0.2) !important;
+        }
+        
+        /* Scanline effect */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.5;
+            animation: scanline 4s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { transform: translateY(-100vh); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            #map {
+                height: 400px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="scanline"></div>
     <div class="container">
-        <h1>WKT Polygon Visualizer</h1>
+        <div class="corner corner-tl"></div>
+        <div class="corner corner-tr"></div>
+        <div class="corner corner-bl"></div>
+        <div class="corner corner-br"></div>
+        
+        <div class="status">
+            <div class="status-dot" id="statusDot"></div>
+            <span>SYSTEM ONLINE</span>
+        </div>
+        
+        <h1>WKT POLYGON VISUALIZER</h1>
         
         <div class="input-section">
-            <label for="wktInput"><strong>Enter WKT Polygon:</strong></label>
+            <div class="label-wrapper">
+                <i class="fas fa-globe"></i>
+                <label for="wktInput">ENTER WKT POLYGON:</label>
+            </div>
             <textarea id="wktInput" placeholder="Paste your WKT polygon here..."></textarea>
             
             <div class="button-group">
-                <button class="btn" id="visualizeBtn">Visualize</button>
-                <button class="btn btn-clear" id="clearBtn">Clear</button>
-                <button class="btn btn-sample" id="sampleBtn">Load Sample</button>
+                <button id="visualizeBtn">
+                    <i class="fas fa-eye"></i> Visualize
+                </button>
+                <button id="clearBtn">
+                    <i class="fas fa-trash-alt"></i> Clear
+                </button>
+                <button id="sampleBtn">
+                    <i class="fas fa-random"></i> Load Sample
+                </button>
             </div>
             
-            <div id="errorMsg" class="error"></div>
-            <div class="info">Supports POLYGON, MULTIPOLYGON, LINESTRING, POINT and other WKT geometry types</div>
-            <div class="basemap-info">Click the layers icon <b>⊡</b> in the top-right corner to switch between different basemaps</div>
+            <div id="errorMsg"></div>
+            <div class="info"><i class="fas fa-info-circle"></i> Supports POLYGON, MULTIPOLYGON, LINESTRING, POINT and other WKT geometry types</div>
+            <div class="info"><i class="fas fa-layer-group"></i> Click the layers icon in the top-right corner to switch between different basemaps</div>
         </div>
         
         <div id="map"></div>
@@ -136,48 +457,45 @@
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     
-    <!-- Proj4js for coordinate transformations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.8.0/proj4.js"></script>
-    
-    <!-- Leaflet-Omnivore for WKT parsing -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
-    
     <script>
-        // Initialize the map
-        const map = L.map('map').setView([0, 0], 2);
-        
-        // Base maps
-        const baseMaps = {
-            "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }),
-            "OpenTopoMap": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a>',
-                maxZoom: 17
-            }),
-            "Esri WorldImagery": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
-            }),
-            "CartoDB Dark": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-            })
-        };
-        
-        // Add OpenStreetMap as the default base layer
-        baseMaps["OpenStreetMap"].addTo(map);
-        
-        // Add layer control to switch between base maps
-        L.control.layers(baseMaps, null, {position: 'topright'}).addTo(map);
-        
-        // Create a layer group for the geometries
-        const geomLayer = L.layerGroup().addTo(map);
-        
         // DOM elements
         const wktInput = document.getElementById('wktInput');
         const visualizeBtn = document.getElementById('visualizeBtn');
         const clearBtn = document.getElementById('clearBtn');
         const sampleBtn = document.getElementById('sampleBtn');
         const errorMsg = document.getElementById('errorMsg');
+        
+        // Initialize map
+        const map = L.map('map').setView([0, 0], 2);
+        
+        // Base maps with retro-futuristic styling
+        const baseMaps = {
+            "Cyber Grid": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }),
+            "Neo Tokyo": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            }),
+            "Satellite Intel": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+            }),
+            "Mainframe": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                className: 'retro-map'
+            })
+        };
+        
+        // Add retro style for OpenStreetMap tiles
+        const retroMapStyle =
+        
+        // Add default base layer
+        baseMaps["Cyber Grid"].addTo(map);
+        
+        // Add layer control
+        L.control.layers(baseMaps).addTo(map);
+        
+        // Layer group for geometries
+        const geomLayer = L.layerGroup().addTo(map);
         
         // Sample WKT polygons
         const samples = [
@@ -187,173 +505,129 @@
             'POINT(-77.0 38.9)' // Washington DC
         ];
 
-        // Custom WKT parser since external libraries are having issues
+        // Functions
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+        
+        function hideError() {
+            errorMsg.style.display = 'none';
+        }
+        
         function parseWKT(wktString) {
             try {
-                // Basic WKT parsing for common geometry types
                 wktString = wktString.trim();
                 
-                // Extract geometry type and coordinates
+                // Extract geometry type
                 const typeMatch = wktString.match(/^([A-Z]+)/);
-                if (!typeMatch) throw new Error("Invalid WKT format: Cannot determine geometry type");
+                if (!typeMatch) throw new Error("Invalid WKT format");
                 
                 const geometryType = typeMatch[1].toUpperCase();
-                
-                // Extract all coordinate pairs using regex
                 const coordsText = wktString.substring(geometryType.length).trim();
                 
-                // For simple geometries
                 if (geometryType === 'POINT') {
-                    // Extract single point coordinates
                     const pointMatch = coordsText.match(/\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/);
                     if (!pointMatch) throw new Error("Invalid POINT format");
                     
-                    const x = parseFloat(pointMatch[1]);
-                    const y = parseFloat(pointMatch[2]);
+                    const lng = parseFloat(pointMatch[1]);
+                    const lat = parseFloat(pointMatch[2]);
                     
-                    if (isNaN(x) || isNaN(y)) {
-                        throw new Error(`Invalid POINT coordinates: (${pointMatch[1]}, ${pointMatch[2]})`);
-                    }
-                    
-                    return L.marker([y, x]);
+                    return L.circleMarker([lat, lng], {
+                        radius: 8,
+                        color: '#ff00cc',
+                        weight: 2,
+                        fillColor: '#00ffff',
+                        fillOpacity: 0.7
+                    });
                 } 
                 else if (geometryType === 'LINESTRING') {
-                    // Extract coordinates between parentheses
                     const coordsMatch = coordsText.match(/\((.*)\)/);
                     if (!coordsMatch) throw new Error("Invalid LINESTRING format");
                     
-                    // Parse coordinates with error checking
-                    const coordPairs = [];
+                    const points = [];
                     const pairs = coordsMatch[1].split(',');
                     
-                    for (let i = 0; i < pairs.length; i++) {
-                        const pair = pairs[i].trim();
-                        const coords = pair.split(/\s+/);
-                        
+                    for (const pair of pairs) {
+                        const coords = pair.trim().split(/\s+/);
                         if (coords.length >= 2) {
                             const lng = parseFloat(coords[0]);
                             const lat = parseFloat(coords[1]);
-                            
                             if (!isNaN(lng) && !isNaN(lat)) {
-                                coordPairs.push([lat, lng]); // [lat, lng] for Leaflet
-                            } else {
-                                console.error("Invalid coordinate pair:", pair);
+                                points.push([lat, lng]);
                             }
                         }
                     }
                     
-                    if (coordPairs.length === 0) {
-                        throw new Error("Could not parse any valid coordinates from LINESTRING");
-                    }
-                    
-                    return L.polyline(coordPairs, {
-                        color: '#3388ff',
+                    return L.polyline(points, {
+                        color: '#00ffff',
                         weight: 3
                     });
                 }
                 else if (geometryType === 'POLYGON') {
-                    // Extract coordinates between parentheses
-                    const coordsMatch = coordsText.match(/\(\((.*)\)\)/);
-                    let coordPairs = [];
+                    let coordString;
+                    const doubleParenMatch = coordsText.match(/\(\((.*)\)\)/);
                     
-                    if (!coordsMatch) {
-                        // Try simpler format with single parentheses
-                        const simpleMatch = coordsText.match(/\((.*)\)/);
-                        if (!simpleMatch) throw new Error("Invalid POLYGON format");
-                        
-                        // Parse coordinates with error checking
-                        const pairs = simpleMatch[1].split(',');
-                        for (let i = 0; i < pairs.length; i++) {
-                            const pair = pairs[i].trim();
-                            const coords = pair.split(/\s+/);
-                            
-                            if (coords.length >= 2) {
-                                const lng = parseFloat(coords[0]);
-                                const lat = parseFloat(coords[1]);
-                                
-                                if (!isNaN(lng) && !isNaN(lat)) {
-                                    coordPairs.push([lat, lng]); // [lat, lng] for Leaflet
-                                } else {
-                                    console.error("Invalid coordinate pair:", pair);
-                                }
-                            }
-                        }
+                    if (doubleParenMatch) {
+                        coordString = doubleParenMatch[1];
                     } else {
-                        // Parse coordinates with error checking
-                        const pairs = coordsMatch[1].split(',');
-                        for (let i = 0; i < pairs.length; i++) {
-                            const pair = pairs[i].trim();
-                            const coords = pair.split(/\s+/);
-                            
-                            if (coords.length >= 2) {
-                                const lng = parseFloat(coords[0]);
-                                const lat = parseFloat(coords[1]);
-                                
-                                if (!isNaN(lng) && !isNaN(lat)) {
-                                    coordPairs.push([lat, lng]); // [lat, lng] for Leaflet
-                                } else {
-                                    console.error("Invalid coordinate pair:", pair);
-                                }
+                        const singleParenMatch = coordsText.match(/\((.*)\)/);
+                        if (!singleParenMatch) throw new Error("Invalid POLYGON format");
+                        coordString = singleParenMatch[1];
+                    }
+                    
+                    const points = [];
+                    const pairs = coordString.split(',');
+                    
+                    for (const pair of pairs) {
+                        const coords = pair.trim().split(/\s+/);
+                        if (coords.length >= 2) {
+                            const lng = parseFloat(coords[0]);
+                            const lat = parseFloat(coords[1]);
+                            if (!isNaN(lng) && !isNaN(lat)) {
+                                points.push([lat, lng]);
                             }
                         }
                     }
                     
-                    if (coordPairs.length === 0) {
-                        throw new Error("Could not parse any valid coordinates from POLYGON");
-                    }
-                    
-                    return L.polygon(coordPairs, {
-                        color: '#3388ff',
+                    return L.polygon(points, {
+                        color: '#ff00cc',
                         weight: 2,
-                        fillColor: '#3388ff',
+                        fillColor: '#00ffff',
                         fillOpacity: 0.2
                     });
                 }
                 else if (geometryType === 'MULTIPOLYGON') {
-                    // Improved multipolygon parsing
-                    try {
-                        // First, find all the polygon definitions
-                        const polygons = [];
-                        const polygonRegex = /\(\((.*?)\)\)/g;
-                        let match;
+                    const polygonRegex = /\(\((.*?)\)\)/g;
+                    const polygons = [];
+                    let match;
+                    
+                    while ((match = polygonRegex.exec(coordsText)) !== null) {
+                        const points = [];
+                        const pairs = match[1].split(',');
                         
-                        while ((match = polygonRegex.exec(coordsText)) !== null) {
-                            const coordinates = [];
-                            const coordText = match[1];
-                            
-                            // Process each coordinate pair
-                            const pairs = coordText.split(',');
-                            for (const pair of pairs) {
-                                const parts = pair.trim().split(/\s+/);
-                                if (parts.length >= 2) {
-                                    const lng = parseFloat(parts[0]);
-                                    const lat = parseFloat(parts[1]);
-                                    
-                                    if (!isNaN(lng) && !isNaN(lat)) {
-                                        coordinates.push([lat, lng]); // [lat, lng] for Leaflet
-                                    }
+                        for (const pair of pairs) {
+                            const coords = pair.trim().split(/\s+/);
+                            if (coords.length >= 2) {
+                                const lng = parseFloat(coords[0]);
+                                const lat = parseFloat(coords[1]);
+                                if (!isNaN(lng) && !isNaN(lat)) {
+                                    points.push([lat, lng]);
                                 }
                             }
-                            
-                            if (coordinates.length > 0) {
-                                polygons.push(coordinates);
-                            }
                         }
                         
-                        if (polygons.length === 0) {
-                            throw new Error("No valid polygons found in MULTIPOLYGON");
+                        if (points.length > 0) {
+                            polygons.push(points);
                         }
-                        
-                        return L.polygon(polygons, {
-                            color: '#3388ff',
-                            weight: 2,
-                            fillColor: '#3388ff',
-                            fillOpacity: 0.2
-                        });
-                    } catch (e) {
-                        console.error("Error parsing MULTIPOLYGON:", e);
-                        throw new Error("Failed to parse MULTIPOLYGON: " + e.message);
                     }
+                    
+                    return L.polygon(polygons, {
+                        color: '#ff00cc',
+                        weight: 2,
+                        fillColor: '#00ffff',
+                        fillOpacity: 0.2
+                    });
                 }
                 
                 throw new Error(`Unsupported geometry type: ${geometryType}`);
@@ -361,58 +635,42 @@
                 throw error;
             }
         }
-
-        // Function to visualize WKT
+        
         function visualizeWKT() {
             const wktString = wktInput.value.trim();
             
             if (!wktString) {
-                showError('Please enter a WKT string.');
+                showError("Please enter a WKT string");
                 return;
             }
             
             try {
-                // Clear previous geometries and errors
+                // Clear previous layers and errors
                 geomLayer.clearLayers();
-                errorMsg.textContent = '';
+                hideError();
                 
-                // Parse WKT and create Leaflet layer
+                // Parse and display the WKT
                 const layer = parseWKT(wktString);
-                
-                // Add to the map
                 layer.addTo(geomLayer);
                 
-                // Zoom to the feature bounds
-                try {
-                    map.fitBounds(layer.getBounds(), {
-                        padding: [50, 50],
-                        maxZoom: 16
-                    });
-                } catch (e) {
-                    // For point geometries that don't have bounds
-                    if (layer instanceof L.Marker) {
-                        map.setView(layer.getLatLng(), 10);
-                    }
+                // Fit bounds
+                if (layer.getBounds) {
+                    map.fitBounds(layer.getBounds(), { padding: [50, 50] });
+                } else if (layer.getLatLng) {
+                    map.setView(layer.getLatLng(), 10);
                 }
             } catch (error) {
-                showError('Error: ' + error.message);
+                showError("Error: " + error.message);
                 console.error(error);
             }
         }
         
-        // Function to show error messages
-        function showError(message) {
-            errorMsg.textContent = message;
-        }
-        
-        // Clear the map and input
         function clearAll() {
-            wktInput.value = '';
-            errorMsg.textContent = '';
+            wktInput.value = "";
             geomLayer.clearLayers();
+            hideError();
         }
         
-        // Load a random sample
         function loadSample() {
             const randomIndex = Math.floor(Math.random() * samples.length);
             wktInput.value = samples[randomIndex];
@@ -424,7 +682,7 @@
         clearBtn.addEventListener('click', clearAll);
         sampleBtn.addEventListener('click', loadSample);
         
-        // Also visualize on Enter key press (with Ctrl or Cmd)
+        // Keyboard shortcut
         wktInput.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 visualizeWKT();
