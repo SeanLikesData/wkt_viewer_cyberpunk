@@ -36,6 +36,13 @@
         
         // Layer group for geometries
         const geomLayer = L.layerGroup().addTo(map);
+
+        // Layer group for operation results
+        const operationLayer = L.layerGroup().addTo(map);
+
+        // Store current geometry for operations
+        let currentGeometry = null;
+        let allGeometries = [];
         
         // Sample WKT polygons
         const samples = [
@@ -176,23 +183,69 @@
             }
         }
         
+        // Helper: Convert Leaflet layer to GeoJSON
+        function leafletToGeoJSON(layer) {
+            return layer.toGeoJSON();
+        }
+
+        // Helper: Convert GeoJSON to Leaflet layer with custom styling
+        function geoJSONToLeaflet(geojson, color = '#ffaa00') {
+            return L.geoJSON(geojson, {
+                style: {
+                    color: color,
+                    weight: 3,
+                    fillColor: color,
+                    fillOpacity: 0.3
+                },
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 8,
+                        color: color,
+                        weight: 2,
+                        fillColor: color,
+                        fillOpacity: 0.7
+                    });
+                }
+            });
+        }
+
+        // Operation info display
+        function showOperationInfo(message) {
+            const operationInfo = document.getElementById('operationInfo');
+            operationInfo.textContent = message;
+            operationInfo.classList.add('show');
+            operationInfo.style.display = 'block';
+        }
+
+        function hideOperationInfo() {
+            const operationInfo = document.getElementById('operationInfo');
+            operationInfo.classList.remove('show');
+            setTimeout(() => {
+                operationInfo.style.display = 'none';
+            }, 300);
+        }
+
         function visualizeWKT() {
             const wktString = wktInput.value.trim();
-            
+
             if (!wktString) {
                 showError("Please enter a WKT string");
                 return;
             }
-            
+
             try {
                 // Clear previous layers and errors
                 geomLayer.clearLayers();
                 hideError();
-                
+
                 // Parse and display the WKT
                 const layer = parseWKT(wktString);
                 layer.addTo(geomLayer);
-                
+
+                // Store current geometry for operations
+                currentGeometry = leafletToGeoJSON(layer);
+                allGeometries.push(currentGeometry);
+
                 // Fit bounds
                 if (layer.getBounds) {
                     map.fitBounds(layer.getBounds(), { padding: [50, 50] });
@@ -210,18 +263,194 @@
             geomLayer.clearLayers();
             hideError();
         }
-        
+
         function loadSample() {
             const randomIndex = Math.floor(Math.random() * samples.length);
             wktInput.value = samples[randomIndex];
             visualizeWKT();
         }
-        
+
+        // ===== GEOMETRY OPERATIONS =====
+
+        function executeBuffer() {
+            if (!currentGeometry) {
+                showError("Please visualize a geometry first!");
+                return;
+            }
+
+            try {
+                hideError();
+                const distance = parseFloat(document.getElementById('bufferDistance').value);
+
+                if (isNaN(distance) || distance <= 0) {
+                    showError("Please enter a valid buffer distance!");
+                    return;
+                }
+
+                // Create buffer using Turf.js
+                const buffered = turf.buffer(currentGeometry, distance, { units: 'kilometers' });
+
+                // Clear previous operations and display buffer
+                operationLayer.clearLayers();
+                const bufferLayer = geoJSONToLeaflet(buffered, '#9d4edd');
+                bufferLayer.addTo(operationLayer);
+
+                // Fit bounds to show both original and buffer
+                const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
+                map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
+
+                showOperationInfo(`Buffer Shield Deployed: ${distance}km radius protection zone activated`);
+            } catch (error) {
+                showError("Buffer operation failed: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function executeSimplify() {
+            if (!currentGeometry) {
+                showError("Please visualize a geometry first!");
+                return;
+            }
+
+            try {
+                hideError();
+                const tolerance = parseFloat(document.getElementById('simplifyTolerance').value);
+
+                if (isNaN(tolerance) || tolerance <= 0) {
+                    showError("Please enter a valid tolerance value!");
+                    return;
+                }
+
+                // Simplify using Turf.js
+                const simplified = turf.simplify(currentGeometry, { tolerance: tolerance, highQuality: false });
+
+                // Clear previous operations and display simplified geometry
+                operationLayer.clearLayers();
+                const simplifiedLayer = geoJSONToLeaflet(simplified, '#f72585');
+                simplifiedLayer.addTo(operationLayer);
+
+                // Fit bounds
+                map.fitBounds(simplifiedLayer.getBounds(), { padding: [50, 50] });
+
+                // Count vertices
+                const originalCoords = JSON.stringify(currentGeometry).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
+                const simplifiedCoords = JSON.stringify(simplified).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
+
+                showOperationInfo(`Geometry Optimized: Reduced from ${originalCoords.length} to ${simplifiedCoords.length} vertices (${Math.round((1 - simplifiedCoords.length / originalCoords.length) * 100)}% reduction)`);
+            } catch (error) {
+                showError("Simplify operation failed: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function executeConvexHull() {
+            if (!currentGeometry) {
+                showError("Please visualize a geometry first!");
+                return;
+            }
+
+            try {
+                hideError();
+
+                // Create convex hull using Turf.js
+                const hull = turf.convex(currentGeometry);
+
+                if (!hull) {
+                    showError("Could not generate convex hull for this geometry");
+                    return;
+                }
+
+                // Clear previous operations and display hull
+                operationLayer.clearLayers();
+                const hullLayer = geoJSONToLeaflet(hull, '#4cc9f0');
+                hullLayer.addTo(operationLayer);
+
+                // Fit bounds to show both original and hull
+                const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
+                map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
+
+                showOperationInfo(`Convex Hull Generated: Minimum bounding polygon calculated`);
+            } catch (error) {
+                showError("Convex hull operation failed: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function executeCentroid() {
+            if (!currentGeometry) {
+                showError("Please visualize a geometry first!");
+                return;
+            }
+
+            try {
+                hideError();
+
+                // Calculate centroid using Turf.js
+                const centroid = turf.centroid(currentGeometry);
+
+                // Clear previous operations and display centroid
+                operationLayer.clearLayers();
+                const centroidLayer = geoJSONToLeaflet(centroid, '#ffd60a');
+                centroidLayer.addTo(operationLayer);
+
+                // Get coordinates
+                const coords = centroid.geometry.coordinates;
+
+                showOperationInfo(`Centroid Located: [${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}]`);
+            } catch (error) {
+                showError("Centroid operation failed: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function executeUnion() {
+            if (allGeometries.length < 2) {
+                showError("Please visualize at least 2 geometries! Load a geometry, then load another to merge them.");
+                return;
+            }
+
+            try {
+                hideError();
+
+                // Union all geometries using Turf.js
+                let unioned = allGeometries[0];
+                for (let i = 1; i < allGeometries.length; i++) {
+                    unioned = turf.union(turf.featureCollection([unioned, allGeometries[i]]));
+                }
+
+                // Clear previous operations and display union
+                operationLayer.clearLayers();
+                const unionLayer = geoJSONToLeaflet(unioned, '#06ffa5');
+                unionLayer.addTo(operationLayer);
+
+                // Fit bounds
+                map.fitBounds(unionLayer.getBounds(), { padding: [50, 50] });
+
+                showOperationInfo(`Merge Protocol Executed: ${allGeometries.length} geometries combined into unified perimeter`);
+            } catch (error) {
+                showError("Union operation failed: " + error.message);
+                console.error(error);
+            }
+        }
+
+        function clearOperations() {
+            operationLayer.clearLayers();
+            hideOperationInfo();
+        }
+
         // Event listeners
         visualizeBtn.addEventListener('click', visualizeWKT);
         clearBtn.addEventListener('click', clearAll);
         sampleBtn.addEventListener('click', loadSample);
-        
+
+        // Operation event listeners
+        document.getElementById('bufferBtn').addEventListener('click', executeBuffer);
+        document.getElementById('simplifyBtn').addEventListener('click', executeSimplify);
+        document.getElementById('convexHullBtn').addEventListener('click', executeConvexHull);
+        document.getElementById('centroidBtn').addEventListener('click', executeCentroid);
+        document.getElementById('unionBtn').addEventListener('click', executeUnion);
+        document.getElementById('clearOperationsBtn').addEventListener('click', clearOperations);
+
         // Keyboard shortcut
         wktInput.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {

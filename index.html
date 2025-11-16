@@ -56,13 +56,63 @@
             <div class="info"><i class="fas fa-info-circle"></i> Supports POLYGON, MULTIPOLYGON, LINESTRING, POINT and other WKT geometry types</div>
             <div class="info"><i class="fas fa-layer-group"></i> Click the layers icon in the top-right corner to switch between different basemaps</div>
         </div>
-        
+
+        <div class="operations-section">
+            <div class="label-wrapper">
+                <i class="fas fa-cogs"></i>
+                <label>EXECUTE PROTOCOLS:</label>
+            </div>
+
+            <div class="operations-grid">
+                <div class="operation-group">
+                    <label class="operation-label">
+                        <i class="fas fa-shield-alt"></i> BUFFER DISTANCE (KM):
+                    </label>
+                    <input type="number" id="bufferDistance" value="10" min="0.1" step="0.1" class="operation-input">
+                    <button id="bufferBtn" class="operation-btn buffer-btn">
+                        <i class="fas fa-shield-alt"></i> Deploy Buffer Shield
+                    </button>
+                </div>
+
+                <div class="operation-group">
+                    <label class="operation-label">
+                        <i class="fas fa-compress-arrows-alt"></i> SIMPLIFY TOLERANCE:
+                    </label>
+                    <input type="number" id="simplifyTolerance" value="0.01" min="0.001" step="0.001" class="operation-input">
+                    <button id="simplifyBtn" class="operation-btn simplify-btn">
+                        <i class="fas fa-compress-arrows-alt"></i> Optimize Geometry
+                    </button>
+                </div>
+
+                <button id="convexHullBtn" class="operation-btn convex-btn">
+                    <i class="fas fa-draw-polygon"></i> Generate Convex Hull
+                </button>
+
+                <button id="centroidBtn" class="operation-btn centroid-btn">
+                    <i class="fas fa-crosshairs"></i> Locate Centroid
+                </button>
+
+                <button id="unionBtn" class="operation-btn union-btn">
+                    <i class="fas fa-object-group"></i> Execute Merge Protocol
+                </button>
+
+                <button id="clearOperationsBtn" class="operation-btn clear-ops-btn">
+                    <i class="fas fa-broom"></i> Clear Operations
+                </button>
+            </div>
+
+            <div id="operationInfo" class="operation-info"></div>
+        </div>
+
         <div id="map"></div>
     </div>
     
     <!-- Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
-    
+
+    <!-- Turf.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+
     <!-- Custom JS -->
     <script src="script.js"></script>
 </body>
