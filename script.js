@@ -43,6 +43,40 @@
         // Store current geometry for operations
         let currentGeometry = null;
         let allGeometries = [];
+
+        // Store reference to the current editable layer
+        let currentEditableLayer = null;
+
+        // Initialize draw control for editing
+        const drawControl = new L.Control.Draw({
+            draw: false,
+            edit: {
+                featureGroup: geomLayer,
+                edit: {
+                    selectedPathOptions: {
+                        maintainColor: true,
+                        opacity: 0.8,
+                        fillOpacity: 0.4
+                    }
+                }
+            }
+        });
+        map.addControl(drawControl);
+
+        // Handle geometry edits
+        map.on(L.Draw.Event.EDITED, function (e) {
+            const layers = e.layers;
+            layers.eachLayer(function (layer) {
+                // Update current geometry with edited version
+                currentGeometry = leafletToGeoJSON(layer);
+                currentEditableLayer = layer;
+
+                // Update WKT textarea with new geometry
+                updateWKTFromGeometry();
+
+                showOperationInfo('Geometry edited successfully');
+            });
+        });
         
         // Sample WKT polygons
         const samples = [
@@ -209,6 +243,48 @@
             });
         }
 
+        // Helper: Convert GeoJSON to WKT format
+        function geoJSONToWKT(geojson) {
+            const geom = geojson.geometry || geojson;
+            const type = geom.type;
+            const coords = geom.coordinates;
+
+            function formatCoordinatePair(coord) {
+                return coord.join(' ');
+            }
+
+            function formatCoordinateArray(coordArray) {
+                return coordArray.map(formatCoordinatePair).join(', ');
+            }
+
+            function formatPolygonRing(ring) {
+                return '(' + formatCoordinateArray(ring) + ')';
+            }
+
+            if (type === 'Point') {
+                return 'POINT(' + formatCoordinatePair(coords) + ')';
+            } else if (type === 'LineString') {
+                return 'LINESTRING(' + formatCoordinateArray(coords) + ')';
+            } else if (type === 'Polygon') {
+                const rings = coords.map(formatPolygonRing).join(', ');
+                return 'POLYGON(' + rings + ')';
+            } else if (type === 'MultiPolygon') {
+                const polygons = coords.map(polygon => {
+                    const rings = polygon.map(formatPolygonRing).join(', ');
+                    return '(' + rings + ')';
+                }).join(', ');
+                return 'MULTIPOLYGON(' + polygons + ')';
+            } else if (type === 'MultiLineString') {
+                const lines = coords.map(line => '(' + formatCoordinateArray(line) + ')').join(', ');
+                return 'MULTILINESTRING(' + lines + ')';
+            } else if (type === 'MultiPoint') {
+                const points = coords.map(formatCoordinatePair).join(', ');
+                return 'MULTIPOINT(' + points + ')';
+            }
+
+            throw new Error('Unsupported geometry type: ' + type);
+        }
+
         // Operation info display
         function showOperationInfo(message) {
             const operationInfo = document.getElementById('operationInfo');
@@ -296,6 +372,10 @@
                 const bufferLayer = geoJSONToLeaflet(buffered, '#9d4edd');
                 bufferLayer.addTo(operationLayer);
 
+                // Update current geometry and WKT
+                currentGeometry = buffered;
+                updateWKTFromGeometry();
+
                 // Fit bounds to show both original and buffer
                 const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
                 map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
@@ -325,17 +405,21 @@
                 // Simplify using Turf.js
                 const simplified = turf.simplify(currentGeometry, { tolerance: tolerance, highQuality: false });
 
+                // Count vertices before update
+                const originalCoords = JSON.stringify(currentGeometry).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
+                const simplifiedCoords = JSON.stringify(simplified).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
+
                 // Clear previous operations and display simplified geometry
                 operationLayer.clearLayers();
                 const simplifiedLayer = geoJSONToLeaflet(simplified, '#f72585');
                 simplifiedLayer.addTo(operationLayer);
 
+                // Update current geometry and WKT
+                currentGeometry = simplified;
+                updateWKTFromGeometry();
+
                 // Fit bounds
                 map.fitBounds(simplifiedLayer.getBounds(), { padding: [50, 50] });
-
-                // Count vertices
-                const originalCoords = JSON.stringify(currentGeometry).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
-                const simplifiedCoords = JSON.stringify(simplified).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
 
                 showOperationInfo(`Geometry simplified: Reduced from ${originalCoords.length} to ${simplifiedCoords.length} vertices (${Math.round((1 - simplifiedCoords.length / originalCoords.length) * 100)}% reduction)`);
             } catch (error) {
@@ -366,6 +450,10 @@
                 const hullLayer = geoJSONToLeaflet(hull, '#4cc9f0');
                 hullLayer.addTo(operationLayer);
 
+                // Update current geometry and WKT
+                currentGeometry = hull;
+                updateWKTFromGeometry();
+
                 // Fit bounds to show both original and hull
                 const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
                 map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
@@ -393,6 +481,10 @@
                 operationLayer.clearLayers();
                 const centroidLayer = geoJSONToLeaflet(centroid, '#ffd60a');
                 centroidLayer.addTo(operationLayer);
+
+                // Update current geometry and WKT
+                currentGeometry = centroid;
+                updateWKTFromGeometry();
 
                 // Get coordinates
                 const coords = centroid.geometry.coordinates;
@@ -424,6 +516,10 @@
                 const unionLayer = geoJSONToLeaflet(unioned, '#06ffa5');
                 unionLayer.addTo(operationLayer);
 
+                // Update current geometry and WKT
+                currentGeometry = unioned;
+                updateWKTFromGeometry();
+
                 // Fit bounds
                 map.fitBounds(unionLayer.getBounds(), { padding: [50, 50] });
 
@@ -439,10 +535,60 @@
             hideOperationInfo();
         }
 
+        // Update WKT textarea from current geometry
+        function updateWKTFromGeometry() {
+            if (!currentGeometry) {
+                return;
+            }
+
+            try {
+                const wkt = geoJSONToWKT(currentGeometry);
+                wktInput.value = wkt;
+            } catch (error) {
+                console.error('Error converting to WKT:', error);
+                showError('Error converting geometry to WKT: ' + error.message);
+            }
+        }
+
+        // Copy WKT to clipboard
+        function copyWKT() {
+            const wktText = wktInput.value.trim();
+
+            if (!wktText) {
+                showError('No WKT to copy! Please visualize a geometry first.');
+                return;
+            }
+
+            try {
+                // Use the modern clipboard API
+                navigator.clipboard.writeText(wktText).then(function() {
+                    showOperationInfo('WKT copied to clipboard!');
+                }).catch(function(err) {
+                    // Fallback method
+                    const textArea = document.createElement('textarea');
+                    textArea.value = wktText;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try {
+                        document.execCommand('copy');
+                        showOperationInfo('WKT copied to clipboard!');
+                    } catch (copyErr) {
+                        showError('Failed to copy WKT: ' + copyErr.message);
+                    }
+                    document.body.removeChild(textArea);
+                });
+            } catch (error) {
+                showError('Failed to copy WKT: ' + error.message);
+            }
+        }
+
         // Event listeners
         visualizeBtn.addEventListener('click', visualizeWKT);
         clearBtn.addEventListener('click', clearAll);
         sampleBtn.addEventListener('click', loadSample);
+        document.getElementById('copyWktBtn').addEventListener('click', copyWKT);
 
         // Operation event listeners
         document.getElementById('bufferBtn').addEventListener('click', executeBuffer);
