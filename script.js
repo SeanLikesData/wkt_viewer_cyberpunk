@@ -299,7 +299,7 @@
                 const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
                 map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
 
-                showOperationInfo(`Buffer Shield Deployed: ${distance}km radius protection zone activated`);
+                showOperationInfo(`Buffer created: ${distance}km buffer zone`);
             } catch (error) {
                 showError("Buffer operation failed: " + error.message);
                 console.error(error);
@@ -336,7 +336,7 @@
                 const originalCoords = JSON.stringify(currentGeometry).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
                 const simplifiedCoords = JSON.stringify(simplified).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
 
-                showOperationInfo(`Geometry Optimized: Reduced from ${originalCoords.length} to ${simplifiedCoords.length} vertices (${Math.round((1 - simplifiedCoords.length / originalCoords.length) * 100)}% reduction)`);
+                showOperationInfo(`Geometry simplified: Reduced from ${originalCoords.length} to ${simplifiedCoords.length} vertices (${Math.round((1 - simplifiedCoords.length / originalCoords.length) * 100)}% reduction)`);
             } catch (error) {
                 showError("Simplify operation failed: " + error.message);
                 console.error(error);
@@ -369,7 +369,7 @@
                 const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
                 map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
 
-                showOperationInfo(`Convex Hull Generated: Minimum bounding polygon calculated`);
+                showOperationInfo(`Convex hull created: Minimum bounding polygon`);
             } catch (error) {
                 showError("Convex hull operation failed: " + error.message);
                 console.error(error);
@@ -396,7 +396,7 @@
                 // Get coordinates
                 const coords = centroid.geometry.coordinates;
 
-                showOperationInfo(`Centroid Located: [${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}]`);
+                showOperationInfo(`Centroid calculated: [${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}]`);
             } catch (error) {
                 showError("Centroid operation failed: " + error.message);
                 console.error(error);
@@ -426,7 +426,7 @@
                 // Fit bounds
                 map.fitBounds(unionLayer.getBounds(), { padding: [50, 50] });
 
-                showOperationInfo(`Merge Protocol Executed: ${allGeometries.length} geometries combined into unified perimeter`);
+                showOperationInfo(`Union completed: ${allGeometries.length} geometries merged`);
             } catch (error) {
                 showError("Union operation failed: " + error.message);
                 console.error(error);

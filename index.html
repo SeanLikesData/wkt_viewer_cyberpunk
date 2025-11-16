@@ -62,7 +62,7 @@
                 <div class="operations-section">
                     <div class="label-wrapper">
                         <i class="fas fa-cogs"></i>
-                        <label>EXECUTE PROTOCOLS:</label>
+                        <label>GIS OPERATIONS:</label>
                     </div>
 
                     <div class="operations-grid">
@@ -72,7 +72,7 @@
                             </label>
                             <input type="number" id="bufferDistance" value="10" min="0.1" step="0.1" class="operation-input">
                             <button id="bufferBtn" class="operation-btn buffer-btn">
-                                <i class="fas fa-shield-alt"></i> Deploy Buffer Shield
+                                <i class="fas fa-shield-alt"></i> Create Buffer
                             </button>
                         </div>
 
@@ -82,20 +82,20 @@
                             </label>
                             <input type="number" id="simplifyTolerance" value="0.01" min="0.001" step="0.001" class="operation-input">
                             <button id="simplifyBtn" class="operation-btn simplify-btn">
-                                <i class="fas fa-compress-arrows-alt"></i> Optimize Geometry
+                                <i class="fas fa-compress-arrows-alt"></i> Simplify Geometry
                             </button>
                         </div>
 
                         <button id="convexHullBtn" class="operation-btn convex-btn">
-                            <i class="fas fa-draw-polygon"></i> Generate Convex Hull
+                            <i class="fas fa-draw-polygon"></i> Convex Hull
                         </button>
 
                         <button id="centroidBtn" class="operation-btn centroid-btn">
-                            <i class="fas fa-crosshairs"></i> Locate Centroid
+                            <i class="fas fa-crosshairs"></i> Calculate Centroid
                         </button>
 
                         <button id="unionBtn" class="operation-btn union-btn">
-                            <i class="fas fa-object-group"></i> Execute Merge Protocol
+                            <i class="fas fa-object-group"></i> Union Geometries
                         </button>
 
                         <button id="clearOperationsBtn" class="operation-btn clear-ops-btn">
