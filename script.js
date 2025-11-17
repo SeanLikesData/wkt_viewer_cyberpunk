@@ -24,10 +24,7 @@
                 className: 'retro-map'
             })
         };
-        
-        // Add retro style for OpenStreetMap tiles
-        const retroMapStyle =
-        
+
         // Add default base layer
         baseMaps["Cyber Grid"].addTo(map);
         
@@ -35,10 +32,10 @@
         L.control.layers(baseMaps).addTo(map);
         
         // Layer group for geometries
-        const geomLayer = L.layerGroup().addTo(map);
+        const geomLayer = L.featureGroup().addTo(map);
 
         // Layer group for operation results
-        const operationLayer = L.layerGroup().addTo(map);
+        const operationLayer = L.featureGroup().addTo(map);
 
         // Store current geometry for operations
         let currentGeometry = null;
