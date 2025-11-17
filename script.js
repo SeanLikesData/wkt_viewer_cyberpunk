@@ -735,11 +735,6 @@
             }
         }
 
-        function clearOperations() {
-            layerManager.clearOperationLayers();
-            hideOperationInfo();
-        }
-
         // Update WKT textarea from current geometry
         function updateWKTFromGeometry() {
             if (!currentGeometry) {
@@ -755,45 +750,10 @@
             }
         }
 
-        // Copy WKT to clipboard
-        function copyWKT() {
-            const wktText = wktInput.value.trim();
-
-            if (!wktText) {
-                showError('No WKT to copy! Please visualize a geometry first.');
-                return;
-            }
-
-            try {
-                // Use the modern clipboard API
-                navigator.clipboard.writeText(wktText).then(function() {
-                    showOperationInfo('WKT copied to clipboard!');
-                }).catch(function(err) {
-                    // Fallback method
-                    const textArea = document.createElement('textarea');
-                    textArea.value = wktText;
-                    textArea.style.position = 'fixed';
-                    textArea.style.left = '-999999px';
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    try {
-                        document.execCommand('copy');
-                        showOperationInfo('WKT copied to clipboard!');
-                    } catch (copyErr) {
-                        showError('Failed to copy WKT: ' + copyErr.message);
-                    }
-                    document.body.removeChild(textArea);
-                });
-            } catch (error) {
-                showError('Failed to copy WKT: ' + error.message);
-            }
-        }
-
         // Event listeners
         visualizeBtn.addEventListener('click', visualizeWKT);
         clearBtn.addEventListener('click', clearAll);
         sampleBtn.addEventListener('click', loadSample);
-        document.getElementById('copyWktBtn').addEventListener('click', copyWKT);
 
         // Operation event listeners
         document.getElementById('bufferBtn').addEventListener('click', executeBuffer);
@@ -801,7 +761,6 @@
         document.getElementById('convexHullBtn').addEventListener('click', executeConvexHull);
         document.getElementById('centroidBtn').addEventListener('click', executeCentroid);
         document.getElementById('unionBtn').addEventListener('click', executeUnion);
-        document.getElementById('clearOperationsBtn').addEventListener('click', clearOperations);
 
         // Keyboard shortcut
         wktInput.addEventListener('keydown', function(e) {
