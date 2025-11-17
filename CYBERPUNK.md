@@ -319,71 +319,226 @@ h1::after {
 
 ## Interactive Elements
 
-### 1. Cyberpunk Buttons
+### 1. Cyberpunk Buttons - Unified Design System
+
+The button system uses a unified cyberpunk aesthetic with angular shapes, neon borders, and color-coded glow effects. All buttons share the same structural design while maintaining functional color coding.
+
+#### Base Button Structure
 ```css
 button {
   font-family: 'Orbitron', sans-serif;
-  background: none;
-  border: none;
+  background: rgba(10, 10, 26, 0.6);
+  border: 2px solid; /* Color defined per button type */
   cursor: pointer;
   padding: 12px 20px;
-  border-radius: 5px;
+  border-radius: 0; /* Angular, not rounded */
   font-weight: bold;
   letter-spacing: 1px;
   text-transform: uppercase;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 8px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+
+  /* Angular tech shape using clip-path */
+  clip-path: polygon(
+    0 0,
+    calc(100% - 10px) 0,
+    100% 10px,
+    100% 100%,
+    10px 100%,
+    0 calc(100% - 10px)
+  );
 }
 
-/* Gradient backgrounds for different button types */
-.primary-btn {
-  background: linear-gradient(135deg, #00ff99 0%, #00cc77 100%);
-  color: #000;
-}
-
-.danger-btn {
-  background: linear-gradient(135deg, #ff3366 0%, #cc0044 100%);
-  color: #000;
-}
-
-.info-btn {
-  background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%);
-  color: #000;
-}
-
-/* Shine effect on hover */
-button::after {
+/* Sweep animation on hover */
+button::before {
   content: '';
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: rgba(255, 255, 255, 0.1);
-  transform: rotate(30deg);
-  transition: transform 0.5s;
-  pointer-events: none;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
 }
 
-button:hover::after {
-  transform: rotate(30deg) translate(-30%, -30%);
+button:hover::before {
+  left: 100%;
 }
 
+/* Universal interactions */
 button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px);
 }
 
 button:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(0);
+}
+
+button i {
+  font-size: 1rem;
+  filter: drop-shadow(0 0 3px currentColor);
 }
 ```
+
+#### Button Types with Color-Coded Glows
+
+**Primary Action (Green):**
+```css
+#visualizeBtn {
+  border-color: #00ff99;
+  color: #00ff99;
+  box-shadow:
+    0 0 10px rgba(0, 255, 153, 0.3),
+    inset 0 0 10px rgba(0, 255, 153, 0.1);
+  text-shadow: 0 0 5px rgba(0, 255, 153, 0.5);
+}
+
+#visualizeBtn:hover {
+  background: rgba(0, 255, 153, 0.1);
+  box-shadow:
+    0 0 20px rgba(0, 255, 153, 0.6),
+    inset 0 0 15px rgba(0, 255, 153, 0.2);
+  text-shadow: 0 0 10px rgba(0, 255, 153, 0.8);
+}
+```
+
+**Destructive Action (Red):**
+```css
+#clearBtn {
+  border-color: #ff3366;
+  color: #ff3366;
+  box-shadow:
+    0 0 10px rgba(255, 51, 102, 0.3),
+    inset 0 0 10px rgba(255, 51, 102, 0.1);
+  text-shadow: 0 0 5px rgba(255, 51, 102, 0.5);
+}
+
+#clearBtn:hover {
+  background: rgba(255, 51, 102, 0.1);
+  box-shadow:
+    0 0 20px rgba(255, 51, 102, 0.6),
+    inset 0 0 15px rgba(255, 51, 102, 0.2);
+  text-shadow: 0 0 10px rgba(255, 51, 102, 0.8);
+}
+```
+
+**Utility Action (Cyan):**
+```css
+#sampleBtn {
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow:
+    0 0 10px rgba(0, 255, 255, 0.3),
+    inset 0 0 10px rgba(0, 255, 255, 0.1);
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+#sampleBtn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  box-shadow:
+    0 0 20px rgba(0, 255, 255, 0.6),
+    inset 0 0 15px rgba(0, 255, 255, 0.2);
+  text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+}
+```
+
+#### Operation Buttons Pattern
+
+Operation buttons follow the same pattern with their specific colors:
+
+```css
+/* Example: Buffer operation (Purple) */
+.buffer-btn {
+  border-color: #9d4edd;
+  color: #9d4edd;
+  box-shadow:
+    0 0 10px rgba(157, 78, 221, 0.3),
+    inset 0 0 10px rgba(157, 78, 221, 0.1);
+  text-shadow: 0 0 5px rgba(157, 78, 221, 0.5);
+}
+
+.buffer-btn:hover {
+  background: rgba(157, 78, 221, 0.1);
+  box-shadow:
+    0 0 20px rgba(157, 78, 221, 0.6),
+    inset 0 0 15px rgba(157, 78, 221, 0.2);
+  text-shadow: 0 0 10px rgba(157, 78, 221, 0.8);
+}
+```
+
+**Operation Color Palette:**
+- Buffer: `#9d4edd` (Purple)
+- Simplify: `#f72585` (Hot Pink)
+- Convex Hull: `#4cc9f0` (Cyan)
+- Centroid: `#ffd60a` (Gold)
+- Union: `#06ffa5` (Neon Green)
+
+#### Small Action Buttons (Layer Controls)
+
+For compact buttons in lists or panels:
+
+```css
+.layer-action-btn {
+  background: rgba(10, 10, 26, 0.6);
+  border: 2px solid rgba(0, 255, 255, 0.5);
+  color: #00ffff;
+  padding: 6px 10px;
+  border-radius: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+  box-shadow:
+    0 0 5px rgba(0, 255, 255, 0.2),
+    inset 0 0 5px rgba(0, 255, 255, 0.1);
+  text-shadow: 0 0 3px rgba(0, 255, 255, 0.5);
+
+  /* Smaller clip-path corners */
+  clip-path: polygon(
+    0 0,
+    calc(100% - 5px) 0,
+    100% 5px,
+    100% 100%,
+    5px 100%,
+    0 calc(100% - 5px)
+  );
+}
+
+.layer-action-btn:hover {
+  background: rgba(0, 255, 255, 0.1);
+  border-color: #00ffff;
+  box-shadow:
+    0 0 10px rgba(0, 255, 255, 0.4),
+    inset 0 0 8px rgba(0, 255, 255, 0.2);
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.8);
+  transform: translateY(-1px);
+}
+```
+
+#### Design Principles
+
+1. **Unified Structure**: All buttons share the same base styling for consistency
+2. **Angular Shapes**: `clip-path` creates futuristic cut corners
+3. **Neon Borders**: 2px solid borders with color-coded glow effects
+4. **Semi-Transparent Backgrounds**: `rgba(10, 10, 26, 0.6)` with backdrop blur
+5. **Glowing Text**: Text shadows that match border colors
+6. **Sweep Animation**: Horizontal light sweep on hover
+7. **Intensifying Glows**: Box shadows and text shadows increase on hover
+8. **Color Coding**: Consistent color meanings (green=primary, red=destructive, cyan=utility)
 
 ### 2. Cyberpunk Input Fields
 ```css
@@ -906,20 +1061,37 @@ Minimal HTML/CSS to get started:
 
     button {
       font-family: 'Orbitron', sans-serif;
-      background: linear-gradient(135deg, #00ff99 0%, #00cc77 100%);
-      color: #000;
-      border: none;
+      background: rgba(10, 10, 26, 0.6);
+      border: 2px solid #00ff99;
+      color: #00ff99;
       padding: 12px 24px;
-      border-radius: 5px;
+      border-radius: 0;
       cursor: pointer;
       font-weight: bold;
       text-transform: uppercase;
-      transition: all 0.3s;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow:
+        0 0 10px rgba(0, 255, 153, 0.3),
+        inset 0 0 10px rgba(0, 255, 153, 0.1);
+      text-shadow: 0 0 5px rgba(0, 255, 153, 0.5);
+      clip-path: polygon(
+        0 0,
+        calc(100% - 10px) 0,
+        100% 10px,
+        100% 100%,
+        10px 100%,
+        0 calc(100% - 10px)
+      );
     }
 
     button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+      background: rgba(0, 255, 153, 0.1);
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 20px rgba(0, 255, 153, 0.6),
+        inset 0 0 15px rgba(0, 255, 153, 0.2);
+      text-shadow: 0 0 10px rgba(0, 255, 153, 0.8);
     }
   </style>
 </head>
