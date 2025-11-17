@@ -44,6 +44,229 @@
         // Store reference to the current editable layer
         let currentEditableLayer = null;
 
+        // ===== LAYER MANAGEMENT SYSTEM =====
+        class LayerManager {
+            constructor(map) {
+                this.map = map;
+                this.layers = new Map(); // layerId -> layer metadata
+                this.layerCounter = 0;
+                this.colors = [
+                    '#9d4edd', '#f72585', '#4cc9f0', '#ffd60a',
+                    '#06ffa5', '#ff6b6b', '#00ffff', '#ff00cc',
+                    '#00ff99', '#ffaa00', '#7209b7', '#00b4d8'
+                ];
+            }
+
+            generateId() {
+                return `layer_${++this.layerCounter}_${Date.now()}`;
+            }
+
+            addLayer(geometry, name, type = 'custom', params = {}) {
+                const id = this.generateId();
+                const color = this.getColorForType(type);
+                const leafletLayer = geoJSONToLeaflet(geometry, color);
+
+                leafletLayer.addTo(this.map);
+
+                const layer = {
+                    id: id,
+                    name: name,
+                    type: type,
+                    geometry: geometry,
+                    leafletLayer: leafletLayer,
+                    visible: true,
+                    color: color,
+                    createdAt: new Date(),
+                    params: params
+                };
+
+                this.layers.set(id, layer);
+                this.updateLayerPanel();
+                return id;
+            }
+
+            getColorForType(type) {
+                const typeColors = {
+                    'input': '#00ffff',
+                    'buffer': '#9d4edd',
+                    'simplify': '#f72585',
+                    'convexhull': '#4cc9f0',
+                    'centroid': '#ffd60a',
+                    'union': '#06ffa5',
+                    'custom': '#ffaa00'
+                };
+                return typeColors[type] || this.colors[this.layers.size % this.colors.length];
+            }
+
+            removeLayer(layerId) {
+                const layer = this.layers.get(layerId);
+                if (layer) {
+                    this.map.removeLayer(layer.leafletLayer);
+                    this.layers.delete(layerId);
+                    this.updateLayerPanel();
+                }
+            }
+
+            toggleLayerVisibility(layerId) {
+                const layer = this.layers.get(layerId);
+                if (layer) {
+                    layer.visible = !layer.visible;
+                    if (layer.visible) {
+                        layer.leafletLayer.addTo(this.map);
+                    } else {
+                        this.map.removeLayer(layer.leafletLayer);
+                    }
+                    this.updateLayerPanel();
+                }
+            }
+
+            renameLayer(layerId, newName) {
+                const layer = this.layers.get(layerId);
+                if (layer) {
+                    layer.name = newName;
+                    this.updateLayerPanel();
+                }
+            }
+
+            getLayerGeometry(layerId) {
+                const layer = this.layers.get(layerId);
+                return layer ? layer.geometry : null;
+            }
+
+            clearAllLayers() {
+                this.layers.forEach(layer => {
+                    this.map.removeLayer(layer.leafletLayer);
+                });
+                this.layers.clear();
+                this.updateLayerPanel();
+            }
+
+            clearOperationLayers() {
+                const operationTypes = ['buffer', 'simplify', 'convexhull', 'centroid', 'union'];
+                this.layers.forEach((layer, id) => {
+                    if (operationTypes.includes(layer.type)) {
+                        this.removeLayer(id);
+                    }
+                });
+            }
+
+            updateLayerPanel() {
+                const panel = document.getElementById('layersList');
+                if (!panel) return;
+
+                panel.innerHTML = '';
+
+                if (this.layers.size === 0) {
+                    panel.innerHTML = '<div class="layer-empty">No layers yet. Visualize a geometry or run an operation to create layers.</div>';
+                    return;
+                }
+
+                // Convert to array and sort by creation time (newest first)
+                const layersArray = Array.from(this.layers.values()).reverse();
+
+                layersArray.forEach(layer => {
+                    const layerItem = document.createElement('div');
+                    layerItem.className = 'layer-item';
+                    layerItem.dataset.layerId = layer.id;
+
+                    const typeIcon = this.getTypeIcon(layer.type);
+                    const timeStr = this.formatTime(layer.createdAt);
+
+                    layerItem.innerHTML = `
+                        <div class="layer-header">
+                            <input type="checkbox" class="layer-visibility" ${layer.visible ? 'checked' : ''}>
+                            <div class="layer-color" style="background-color: ${layer.color}"></div>
+                            <div class="layer-info">
+                                <div class="layer-name">${typeIcon} ${layer.name}</div>
+                                <div class="layer-meta">${layer.type} • ${timeStr}</div>
+                            </div>
+                        </div>
+                        <div class="layer-actions">
+                            <button class="layer-action-btn zoom-btn" title="Zoom to layer">
+                                <i class="fas fa-search-location"></i>
+                            </button>
+                            <button class="layer-action-btn copy-btn" title="Copy WKT">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="layer-action-btn delete-btn" title="Delete layer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+
+                    // Event listeners
+                    const visibilityCheckbox = layerItem.querySelector('.layer-visibility');
+                    visibilityCheckbox.addEventListener('change', () => {
+                        this.toggleLayerVisibility(layer.id);
+                    });
+
+                    const zoomBtn = layerItem.querySelector('.zoom-btn');
+                    zoomBtn.addEventListener('click', () => {
+                        this.zoomToLayer(layer.id);
+                    });
+
+                    const copyBtn = layerItem.querySelector('.copy-btn');
+                    copyBtn.addEventListener('click', () => {
+                        this.copyLayerWKT(layer.id);
+                    });
+
+                    const deleteBtn = layerItem.querySelector('.delete-btn');
+                    deleteBtn.addEventListener('click', () => {
+                        this.removeLayer(layer.id);
+                    });
+
+                    panel.appendChild(layerItem);
+                });
+            }
+
+            getTypeIcon(type) {
+                const icons = {
+                    'input': '<i class="fas fa-map-marked-alt"></i>',
+                    'buffer': '<i class="fas fa-shield-alt"></i>',
+                    'simplify': '<i class="fas fa-compress-arrows-alt"></i>',
+                    'convexhull': '<i class="fas fa-draw-polygon"></i>',
+                    'centroid': '<i class="fas fa-crosshairs"></i>',
+                    'union': '<i class="fas fa-object-group"></i>',
+                    'custom': '<i class="fas fa-layer-group"></i>'
+                };
+                return icons[type] || icons['custom'];
+            }
+
+            formatTime(date) {
+                const now = new Date();
+                const diff = Math.floor((now - date) / 1000); // seconds
+
+                if (diff < 60) return 'just now';
+                if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+                if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+                return date.toLocaleDateString();
+            }
+
+            zoomToLayer(layerId) {
+                const layer = this.layers.get(layerId);
+                if (layer && layer.leafletLayer.getBounds) {
+                    this.map.fitBounds(layer.leafletLayer.getBounds(), { padding: [50, 50] });
+                } else if (layer && layer.leafletLayer.getLatLng) {
+                    this.map.setView(layer.leafletLayer.getLatLng(), 10);
+                }
+            }
+
+            copyLayerWKT(layerId) {
+                const layer = this.layers.get(layerId);
+                if (layer) {
+                    const wkt = geoJSONToWKT(layer.geometry);
+                    navigator.clipboard.writeText(wkt).then(() => {
+                        showOperationInfo(`WKT copied for layer: ${layer.name}`);
+                    }).catch(err => {
+                        showError('Failed to copy WKT: ' + err.message);
+                    });
+                }
+            }
+        }
+
+        // Initialize the layer manager
+        const layerManager = new LayerManager(map);
+
         // Initialize draw control for editing
         const drawControl = new L.Control.Draw({
             draw: false,
@@ -307,23 +530,24 @@
             }
 
             try {
-                // Clear previous layers and errors
-                geomLayer.clearLayers();
                 hideError();
 
-                // Parse and display the WKT
+                // Parse the WKT to get geometry
                 const layer = parseWKT(wktString);
-                layer.addTo(geomLayer);
-
-                // Store current geometry for operations
                 currentGeometry = leafletToGeoJSON(layer);
                 allGeometries.push(currentGeometry);
 
+                // Add to layer manager (which will add to map)
+                const geometryType = currentGeometry.geometry.type;
+                const layerName = `Input ${geometryType} ${layerManager.layers.size + 1}`;
+                const layerId = layerManager.addLayer(currentGeometry, layerName, 'input');
+
                 // Fit bounds
-                if (layer.getBounds) {
-                    map.fitBounds(layer.getBounds(), { padding: [50, 50] });
-                } else if (layer.getLatLng) {
-                    map.setView(layer.getLatLng(), 10);
+                const addedLayer = layerManager.layers.get(layerId);
+                if (addedLayer && addedLayer.leafletLayer.getBounds) {
+                    map.fitBounds(addedLayer.leafletLayer.getBounds(), { padding: [50, 50] });
+                } else if (addedLayer && addedLayer.leafletLayer.getLatLng) {
+                    map.setView(addedLayer.leafletLayer.getLatLng(), 10);
                 }
             } catch (error) {
                 showError("Error: " + error.message);
@@ -334,6 +558,9 @@
         function clearAll() {
             wktInput.value = "";
             geomLayer.clearLayers();
+            layerManager.clearAllLayers();
+            allGeometries = [];
+            currentGeometry = null;
             hideError();
         }
 
@@ -364,18 +591,13 @@
                 // Create buffer using Turf.js
                 const buffered = turf.buffer(currentGeometry, distance, { units: 'kilometers' });
 
-                // Clear previous operations and display buffer
-                operationLayer.clearLayers();
-                const bufferLayer = geoJSONToLeaflet(buffered, '#9d4edd');
-                bufferLayer.addTo(operationLayer);
+                // Add buffer as a new layer
+                const layerName = `Buffer ${distance}km`;
+                layerManager.addLayer(buffered, layerName, 'buffer', { distance });
 
                 // Update current geometry and WKT
                 currentGeometry = buffered;
                 updateWKTFromGeometry();
-
-                // Fit bounds to show both original and buffer
-                const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
-                map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
 
                 showOperationInfo(`Buffer created: ${distance}km buffer zone`);
             } catch (error) {
@@ -406,17 +628,13 @@
                 const originalCoords = JSON.stringify(currentGeometry).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
                 const simplifiedCoords = JSON.stringify(simplified).match(/\[[\d.-]+,[\d.-]+\]/g) || [];
 
-                // Clear previous operations and display simplified geometry
-                operationLayer.clearLayers();
-                const simplifiedLayer = geoJSONToLeaflet(simplified, '#f72585');
-                simplifiedLayer.addTo(operationLayer);
+                // Add simplified geometry as a new layer
+                const layerName = `Simplified (tol: ${tolerance})`;
+                layerManager.addLayer(simplified, layerName, 'simplify', { tolerance });
 
                 // Update current geometry and WKT
                 currentGeometry = simplified;
                 updateWKTFromGeometry();
-
-                // Fit bounds
-                map.fitBounds(simplifiedLayer.getBounds(), { padding: [50, 50] });
 
                 showOperationInfo(`Geometry simplified: Reduced from ${originalCoords.length} to ${simplifiedCoords.length} vertices (${Math.round((1 - simplifiedCoords.length / originalCoords.length) * 100)}% reduction)`);
             } catch (error) {
@@ -442,18 +660,13 @@
                     return;
                 }
 
-                // Clear previous operations and display hull
-                operationLayer.clearLayers();
-                const hullLayer = geoJSONToLeaflet(hull, '#4cc9f0');
-                hullLayer.addTo(operationLayer);
+                // Add convex hull as a new layer
+                const layerName = `Convex Hull`;
+                layerManager.addLayer(hull, layerName, 'convexhull');
 
                 // Update current geometry and WKT
                 currentGeometry = hull;
                 updateWKTFromGeometry();
-
-                // Fit bounds to show both original and hull
-                const allLayers = L.featureGroup([...geomLayer.getLayers(), ...operationLayer.getLayers()]);
-                map.fitBounds(allLayers.getBounds(), { padding: [50, 50] });
 
                 showOperationInfo(`Convex hull created: Minimum bounding polygon`);
             } catch (error) {
@@ -474,17 +687,16 @@
                 // Calculate centroid using Turf.js
                 const centroid = turf.centroid(currentGeometry);
 
-                // Clear previous operations and display centroid
-                operationLayer.clearLayers();
-                const centroidLayer = geoJSONToLeaflet(centroid, '#ffd60a');
-                centroidLayer.addTo(operationLayer);
+                // Get coordinates
+                const coords = centroid.geometry.coordinates;
+
+                // Add centroid as a new layer
+                const layerName = `Centroid [${coords[0].toFixed(2)}, ${coords[1].toFixed(2)}]`;
+                layerManager.addLayer(centroid, layerName, 'centroid');
 
                 // Update current geometry and WKT
                 currentGeometry = centroid;
                 updateWKTFromGeometry();
-
-                // Get coordinates
-                const coords = centroid.geometry.coordinates;
 
                 showOperationInfo(`Centroid calculated: [${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}]`);
             } catch (error) {
@@ -508,17 +720,13 @@
                     unioned = turf.union(turf.featureCollection([unioned, allGeometries[i]]));
                 }
 
-                // Clear previous operations and display union
-                operationLayer.clearLayers();
-                const unionLayer = geoJSONToLeaflet(unioned, '#06ffa5');
-                unionLayer.addTo(operationLayer);
+                // Add union as a new layer
+                const layerName = `Union (${allGeometries.length} geometries)`;
+                layerManager.addLayer(unioned, layerName, 'union');
 
                 // Update current geometry and WKT
                 currentGeometry = unioned;
                 updateWKTFromGeometry();
-
-                // Fit bounds
-                map.fitBounds(unionLayer.getBounds(), { padding: [50, 50] });
 
                 showOperationInfo(`Union completed: ${allGeometries.length} geometries merged`);
             } catch (error) {
@@ -528,7 +736,7 @@
         }
 
         function clearOperations() {
-            operationLayer.clearLayers();
+            layerManager.clearOperationLayers();
             hideOperationInfo();
         }
 
